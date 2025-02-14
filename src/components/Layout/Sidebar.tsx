@@ -21,8 +21,9 @@ export default function Sidebar() {
   return (
     <div
       className={cn(
-        " z-50 fixed left-0 top-0 h-screen bg-background/95 backdrop-blur-lg border-r border-border/40 flex flex-col transition-all duration-300",
-        isCollapsed ? "w-[60px]" : "w-[240px]"
+        "z-50 fixed left-0 top-0 h-screen bg-background/95 backdrop-blur-lg border-r border-border/40 flex flex-col transition-all duration-300",
+        isCollapsed ? "w-[60px]" : "w-[240px]",
+        "hidden md:flex"
       )}
     >
       {/* Logo */}
