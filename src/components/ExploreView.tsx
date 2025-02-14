@@ -63,7 +63,7 @@ export default function ExploreView() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
+    <div className="flex h-[calc(100vh)] bg-[#0F172A]">
       {/* Main Chat Area */}
       <div className="flex-1 overflow-hidden relative">
         <div
