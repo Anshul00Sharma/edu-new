@@ -38,7 +38,14 @@ export default function ExploreView() {
       const userMessage: Message = { type: "user", content: query };
       addMessage(userMessage);
 
-      const response = await apiClient.explore(query, userContext!);
+      // Get all messages except the last one (which we just added)
+      const previousMessages = currentSession?.messages || [];
+
+      const response = await apiClient.explore(
+        query,
+        userContext!,
+        previousMessages
+      );
       console.log(response);
 
       // Add AI response

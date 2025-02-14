@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { GPTService } from "@/lib/server/gptService";
-import { UserContext } from "@/types";
+import { UserContext, Message } from "@/types";
 
 const gptService = new GPTService();
 
 export async function POST(request: Request) {
   try {
-    const { query, userContext } = await request.json();
+    const { query, userContext, messages } = await request.json();
 
     if (!query) {
       return NextResponse.json(
@@ -16,7 +16,11 @@ export async function POST(request: Request) {
     }
 
     try {
-      const response = await gptService.getExploreContent(query, userContext as UserContext);
+      const response = await gptService.getExploreContent(
+        query, 
+        userContext as UserContext,
+        messages as Message[]
+      );
       return NextResponse.json(response);
     } catch (error) {
       console.error("Explore error:", error);

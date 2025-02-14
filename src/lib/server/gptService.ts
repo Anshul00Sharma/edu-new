@@ -1,6 +1,7 @@
 import "server-only";
 import { Question, UserContext, ExploreResponse, StreamContent, ParsedTopic, ParsedQuestion } from '../../types';
 import OpenAI from 'openai';
+import { Message } from "../../types";
 
   export class GPTService {
   private openai: OpenAI;
@@ -84,9 +85,16 @@ import OpenAI from 'openai';
     }
   }
 
-  async getExploreContent(query: string, userContext: UserContext): Promise<ExploreResponse> {
+  async getExploreContent(query: string, userContext: UserContext, messages: Message[] = []): Promise<ExploreResponse> {
     try {
+      // Format conversation history
+      const conversationContext = messages.map(msg => 
+        `${msg.type === 'user' ? 'Student' : 'You'}: ${msg.content}`
+      ).join('\n');
+
       const systemPrompt = `You are a Gen-Z tutor who explains complex topics concisely considering you are teaching someone with a low IQ.
+        ${messages.length > 0 ? `\nPrevious conversation context:\n${conversationContext}\n` : ''}
+
         First, identify the domain of the topic from these categories:
         - SCIENCE: Physics, Chemistry, Biology
         - MATHEMATICS: Algebra, Calculus, Geometry
@@ -99,13 +107,20 @@ import OpenAI from 'openai';
         - CURRENT_AFFAIRS: Global Events, Politics
         - GENERAL: Any other topic
 
+        Consider the previous conversation context (if any) to:
+        1. Avoid repeating information already discussed
+        2. Build upon previously explained concepts
+        3. Make connections to earlier topics when relevant
+        4. Address any misconceptions from previous exchanges
+        5. Maintain continuity in the learning journey
+
         Return your response in this EXACT JSON format:
         {
           "domain": "identified domain",
           "content": {
-            "paragraph1": "## Core Concept\n\n Core concept in around 20-30 words - clear, simple, story-telling based introduction and definition",
-            "paragraph2": "## Key Details\n\n talk more detail about it in around 20-30 words - main ideas and examples",
-            "paragraph3": "## Real-World Impact\n\n Real world applications in around 20-40 words - practical uses and relevance"
+            "paragraph1": "## Core Concept\\n\\n Core concept in around 20-30 words - clear, simple, story-telling based introduction and definition",
+            "paragraph2": "## Key Details\\n\\n talk more detail about it in around 20-30 words - main ideas and examples",
+            "paragraph3": "## Real-World Impact\\n\\n Real world applications in around 20-40 words - practical uses and relevance"
           },
           "relatedTopics": [
             {
@@ -170,6 +185,7 @@ import OpenAI from 'openai';
         - No repetition between paragraphs
         - Make every word count
         - Keep examples specific and brief
+        - Reference previous conversation when relevant
 
         SUBTOPIC GUIDELINES:
         - Focus on the most fascinating aspects
@@ -178,6 +194,7 @@ import OpenAI from 'openai';
         - Include cutting-edge developments
         - Connect to current trends
         - Emphasize "wow factor"
+        - Build upon previously discussed topics
 
         QUESTION GUIDELINES:
         - Start with curiosity triggers: "What if", "How exactly", "Why does", "Can we"
@@ -187,9 +204,10 @@ import OpenAI from 'openai';
         - Connect to emerging trends
         - Challenge assumptions
         - Spark imagination
-        - Make reader think "I never thought about that!"`;
+        - Make reader think "I never thought about that!"
+        - Reference previous topics when appropriate`;
 
-      const userPrompt = `Explain "${query}" in approximately three 20-30 word paragraphs:
+      const userPrompt = `Given our previous conversation${messages.length > 0 ? ' and building upon what we discussed' : ''}, explain "${query}" in approximately three 20-30 word paragraphs:
         1. Basic definition without using words like imagine
         2. more details
         3. Real-world application examples without using the word real world application

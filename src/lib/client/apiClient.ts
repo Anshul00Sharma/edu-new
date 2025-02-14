@@ -1,8 +1,9 @@
-import { UserContext, Question, ExploreResponse } from "@/types";
+import { UserContext, Question, ExploreResponse, Message } from "@/types";
 
 interface APIRequest {
   query: string;
   userContext: UserContext;
+  messages?: Message[];
 }
 
 class APIClient {
@@ -23,8 +24,25 @@ class APIClient {
     return response.json();
   }
 
-  async explore(query: string, userContext: UserContext): Promise<ExploreResponse> {
-    return this.fetchAPI<ExploreResponse>("explore", { query, userContext });
+  async explore(query: string, userContext: UserContext, messages: Message[] = []): Promise<ExploreResponse> {
+    try {
+      const response = await fetch('/api/explore', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query, userContext, messages }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to explore topic');
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Explore API error:', error);
+      throw error;
+    }
   }
 
   async getQuestion(query: string, userContext: UserContext): Promise<Question> {
