@@ -22,9 +22,7 @@ export default function ExploreView() {
   const { currentSession, addMessage, createNewSession } = useChatContext();
   const [isLoading, setIsLoading] = useState(false);
   const [hasInitialMessage, setHasInitialMessage] = useState(false);
-  const [rateLimitWarning, setRateLimitWarning] = useState<string | null>(
-    "Rate limit exceeded. Please try again later. "
-  );
+  const [rateLimitWarning, setRateLimitWarning] = useState<string | null>();
 
   useEffect(() => {
     if (currentSession?.messages.length) {
