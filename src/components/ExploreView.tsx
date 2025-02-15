@@ -10,12 +10,21 @@ import { Header } from "./explore/Header";
 import { ExampleSuggestions } from "./explore/ExampleSuggestions";
 import { MessageList } from "./explore/MessageList";
 import { cn } from "@/lib/utils";
+import { WarningBanner } from "./shared/WarningBanner";
+
+interface APIError {
+  status: number;
+  message: string;
+}
 
 export default function ExploreView() {
   const { userContext } = useUserContext();
   const { currentSession, addMessage, createNewSession } = useChatContext();
   const [isLoading, setIsLoading] = useState(false);
   const [hasInitialMessage, setHasInitialMessage] = useState(false);
+  const [rateLimitWarning, setRateLimitWarning] = useState<string | null>(
+    "Rate limit exceeded. Please try again later. "
+  );
 
   useEffect(() => {
     if (currentSession?.messages.length) {
@@ -46,7 +55,6 @@ export default function ExploreView() {
         userContext!,
         previousMessages
       );
-      console.log(response);
 
       // Add AI response
       const aiMessage: Message = {
@@ -59,11 +67,20 @@ export default function ExploreView() {
       setHasInitialMessage(true);
     } catch (error) {
       console.error("Search error:", error);
-      addMessage({
-        type: "ai",
-        content:
-          "Sorry, I encountered an error while processing your request. Please try again.",
-      });
+
+      // Check if error is an APIError
+      const apiError = error as APIError;
+      if (apiError.status === 429) {
+        setRateLimitWarning(
+          apiError.message || "Rate limit exceeded. Please try again later."
+        );
+      } else {
+        addMessage({
+          type: "ai",
+          content:
+            "Sorry, I encountered an error while processing your request. Please try again.",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -71,6 +88,13 @@ export default function ExploreView() {
 
   return (
     <div className="flex h-[calc(100vh)] bg-[#0F172A]">
+      {rateLimitWarning && (
+        <WarningBanner
+          message={rateLimitWarning}
+          onClose={() => setRateLimitWarning(null)}
+        />
+      )}
+
       {/* Main Chat Area */}
       <div className="flex-1 overflow-hidden relative">
         <div
